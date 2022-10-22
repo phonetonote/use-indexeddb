@@ -135,16 +135,18 @@ export function getActions<T>(currentStore) {
       });
     },
 
-    add(value: T, key?: any) {
+    add(value: T, key?: any, existingTx?: IDBTransaction) {
       return new Promise<number>((resolve, reject) => {
         getConnection()
           .then(db => {
             validateBeforeTransaction(db, currentStore, reject);
-            let tx = createTransaction(db, "readwrite", currentStore, resolve, reject);
+            let tx = existingTx ?? createTransaction(db, "readwrite", currentStore, resolve, reject);
             let objectStore = tx.objectStore(currentStore);
             let request = objectStore.add(value, key);
             request.onsuccess = (e: any) => {
-              (tx as any)?.commit?.();
+              if(!existingTx) {
+                (tx as any)?.commit?.();
+              }
               resolve(e.target.result);
             };
           })
@@ -152,16 +154,18 @@ export function getActions<T>(currentStore) {
       });
     },
 
-    update(value: T, key?: any) {
+    update(value: T, key?: any, existingTx?: IDBTransaction) {
       return new Promise<any>((resolve, reject) => {
         getConnection()
           .then(db => {
             validateBeforeTransaction(db, currentStore, reject);
-            let tx = createTransaction(db, "readwrite", currentStore, resolve, reject);
+            let tx = existingTx ?? createTransaction(db, "readwrite", currentStore, resolve, reject);
             let objectStore = tx.objectStore(currentStore);
             let request = objectStore.put(value, key);
             request.onsuccess = (e: any) => {
-              (tx as any)?.commit?.();
+              if(!existingTx) {
+                (tx as any)?.commit?.();
+              }
               resolve(e.target.result);
             };
           })
